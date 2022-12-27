@@ -32,11 +32,11 @@ class Constants:
     # sandbox testnet accounts
     testnet_accounts = read_test_users("assets/testnet_accounts.csv")
     # sandbox dev accounts
-    dev_accounts = read_test_users("assets/accounts.csv")
+    # dev_accounts = read_test_users("assets/accounts.csv")
 
     # set which accounts to use and creator account
-    accounts = dev_accounts
-    creator_mnemonic = accounts[0].get('mnemonic')
+    accounts = testnet_accounts
+    #creator_mnemonic = accounts[0].get('mnemonic')
 
     # Algorand parameters
     # user declared algod connection parameters. Node must have EnableDeveloperAPI set to true in its config

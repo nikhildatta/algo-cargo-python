@@ -62,8 +62,8 @@ class Trip:
                    trip_end_address: str,
                    trip_start_date: str,
                    trip_end_date: str,
-                   trip_cost: int,
-                   trip_available_seats: int):
+                   trip_unit_cost: int,
+                   trip_capacity: int):
         """
         Create the Smart Contract dApp and start the trip
         :param creator_private_key:
@@ -72,8 +72,8 @@ class Trip:
         :param trip_end_address:
         :param trip_start_date: round for the start date
         :param trip_end_date: round for the end date
-        :param trip_cost:
-        :param trip_available_seats:
+        :param trip_unit_cost:
+        :param trip_capacity:
         :return:
         """
         # compile program to TEAL assembly
@@ -104,8 +104,8 @@ class Trip:
             algo_helper.intToBytes(trip_start_date_round),
             trip_end_date,
             algo_helper.intToBytes(trip_end_date_round),
-            algo_helper.intToBytes(trip_cost),
-            algo_helper.intToBytes(trip_available_seats),
+            algo_helper.intToBytes(trip_unit_cost),
+            algo_helper.intToBytes(trip_capacity),
         ]
 
         address = algo_helper.get_address_from_private_key(creator_private_key)
@@ -176,8 +176,8 @@ class Trip:
                          trip_end_address: str,
                          trip_start_date: str,
                          trip_end_date: str,
-                         trip_cost: int,
-                         trip_available_seats: int):
+                         trip_unit_cost: int,
+                         trip_capacity: int):
         """
         Create the Smart Contract dApp and start the trip
         :param creator_private_key:
@@ -186,8 +186,8 @@ class Trip:
         :param trip_end_address:
         :param trip_start_date: round for the start date
         :param trip_end_date: round for the end date
-        :param trip_cost:
-        :param trip_available_seats:
+        :param trip_unit_cost:
+        :param trip_capacity:
         :return:
         """
         trip_start_date_round = algo_helper.datetime_to_rounds(self.algod_client, trip_start_date)
@@ -202,8 +202,8 @@ class Trip:
             algo_helper.intToBytes(trip_start_date_round),
             trip_end_date,
             algo_helper.intToBytes(trip_end_date_round),
-            algo_helper.intToBytes(trip_cost),
-            algo_helper.intToBytes(trip_available_seats),
+            algo_helper.intToBytes(trip_unit_cost),
+            algo_helper.intToBytes(trip_capacity),
         ]
 
         address = algo_helper.get_address_from_private_key(creator_private_key)
@@ -287,13 +287,14 @@ class Trip:
             utils.console_log("Error during fund_escrow: {}".format(e))
             return False
 
-    def participate(self, user_private_key: str, user_name: str):
+    def participate(self, user_private_key: str, user_name: str, book_capacity: int):
         """
         Add a user to the trip
         Perform a payment transaction from the user to the escrow
         Perform a check transaction from the verifier
         :param user_private_key:
         :param user_name:
+        :param book_capacity:
         """
 
         address = account.address_from_private_key(user_private_key)
@@ -304,7 +305,8 @@ class Trip:
                 call_txn = ApplicationManager.opt_in_app(algod_client=self.algod_client,
                                                          address=address,
                                                          app_id=self.app_id,
-                                                         sign_transaction=user_private_key)
+                                                         sign_transaction=user_private_key,
+                                                         book_capacity=book_capacity)
                 txn_response = ApplicationManager.send_transaction(self.algod_client, call_txn)
                 utils.console_log("OptIn to Application with app-id: {}"
                                   .format(self.app_id), "green")
@@ -325,7 +327,7 @@ class Trip:
 
             self.check_program_hash(approval_program=approval_program, clear_state_program=clear_state_program)
 
-            trip_cost = global_state.get("trip_cost")
+            trip_unit_cost = global_state.get("trip_unit_cost")
             escrow_address = algo_helper.BytesToAddress(global_state.get("escrow_address"))
 
             call_txn = ApplicationManager.call_app(algod_client=self.algod_client,
@@ -336,7 +338,7 @@ class Trip:
             payment_txn = ApplicationManager.payment(algod_client=self.algod_client,
                                                      sender_address=address,
                                                      receiver_address=escrow_address,
-                                                     amount=trip_cost)
+                                                     amount=trip_unit_cost*book_capacity)
             # Atomic transfer
             gid = transaction.calculate_group_id([call_txn, payment_txn])
             call_txn.group = gid
@@ -395,7 +397,7 @@ class Trip:
 
             self.check_program_hash(approval_program=approval_program, clear_state_program=clear_state_program)
 
-            trip_cost = global_state.get("trip_cost")
+            trip_unit_cost = global_state.get("trip_unit_cost")
             escrow_address = algo_helper.BytesToAddress(global_state.get("escrow_address"))
 
             call_txn = ApplicationManager.call_app(algod_client=self.algod_client,
@@ -406,7 +408,7 @@ class Trip:
             payment_txn = ApplicationManager.payment(algod_client=self.algod_client,
                                                      sender_address=escrow_address,
                                                      receiver_address=address,
-                                                     amount=trip_cost)
+                                                     amount=trip_unit_cost*book_capacity)
             # Atomic transfer
             gid = transaction.calculate_group_id([call_txn, payment_txn])
             call_txn.group = gid
@@ -448,7 +450,7 @@ class Trip:
 
             self.check_program_hash(approval_program=approval_program, clear_state_program=clear_state_program)
 
-            trip_cost = global_state.get("trip_cost")
+            trip_unit_cost = global_state.get("trip_unit_cost")
             escrow_address = algo_helper.BytesToAddress(global_state.get("escrow_address"))
 
             call_txn = ApplicationManager.call_app(algod_client=self.algod_client,
@@ -459,7 +461,7 @@ class Trip:
             payment_txn = ApplicationManager.payment(algod_client=self.algod_client,
                                                      sender_address=escrow_address,
                                                      receiver_address=address,
-                                                     amount=trip_cost,
+                                                     amount=trip_unit_cost,
                                                      close_remainder_to=address)
             # Atomic transfer
             gid = transaction.calculate_group_id([call_txn, payment_txn])

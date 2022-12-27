@@ -80,27 +80,14 @@ def get_test_user(user_list, ask_selection=True):
 
 
 def main():
-    # define private keys
-    creator_private_key = algo_helper.get_private_key_from_mnemonic(Constants.creator_mnemonic)
     algod_client = algod.AlgodClient(Constants.algod_token, Constants.algod_address)
-
     app_id = int(get_env('APP_ID'))
     accounts = Constants.accounts
 
     carsharing_trip = Trip(algod_client=algod_client, app_id=app_id)
-    # ------- trip info ---------
-    trip_creator_name = "Test"
-    trip_start_add = "Mestre"
-    trip_end_add = "Milano"
-    trip_start_date = "2022-05-10 10:30"
-    trip_end_date = "2022-05-30 21:00"
-    trip_cost = 5000
-    trip_seats = 3
-    # ---------------------------
-
     color = 'blue'
-    x = 1
-    while x != 0:
+    
+    while True:
         utils.console_log("--------------------------------------------", color)
         utils.console_log('What do you want to do?', color)
         utils.console_log('1) Create Trip', color)
@@ -113,30 +100,42 @@ def main():
         utils.console_log("--------------------------------------------", color)
         x = int(strip(input()))
         if x == 1:
+            # ------- trip info ---------
+            creator = get_test_user(accounts, True)
+            creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
+            trip_creator_name = creator.get('name')
+            trip_start_add = input("Enter Dispatch Location: ")
+            trip_end_add = input("Enter Arrival Location: ")
+            trip_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
+            trip_end_date = input("Enter Arrival Time (yyyy-mm-dd hh:mm): ")
+            trip_unit_cost = int(input("Enter Transportation Cost per kg: "))
+            trip_capacity = int(input("Enter Total Capacity in kg: "))
+            # ---------------------------
             carsharing_trip.create_app(creator_private_key=creator_private_key,
                                        trip_creator_name=trip_creator_name,
                                        trip_start_address=trip_start_add,
                                        trip_end_address=trip_end_add,
                                        trip_start_date=trip_start_date,
                                        trip_end_date=trip_end_date,
-                                       trip_cost=trip_cost,
-                                       trip_available_seats=trip_seats)
+                                       trip_unit_cost=trip_unit_cost,
+                                       trip_capacity=trip_capacity)
             carsharing_trip.initialize_escrow(creator_private_key)
             carsharing_trip.fund_escrow(creator_private_key)
         elif x == 2:
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
-            test_user = get_test_user(accounts, True)
-            test_user_pk = algo_helper.get_private_key_from_mnemonic(test_user.get('mnemonic'))
-            carsharing_trip.participate(test_user_pk, test_user.get('name'))
+            book_user = get_test_user(accounts, True)
+            book_user_pk = algo_helper.get_private_key_from_mnemonic(book_user.get('mnemonic'))
+            book_capacity = int(input("Enter Needed Capacity in kg: "))
+            carsharing_trip.participate(book_user_pk, book_user.get('name'), book_capacity)
         elif x == 3:
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
 
-            test_user = get_test_user(accounts, True)
-            test_user_pk = algo_helper.get_private_key_from_mnemonic(test_user.get('mnemonic'))
-            carsharing_trip.cancel_participation(creator_private_key, test_user_pk, test_user.get('name'))
+            book_user = get_test_user(accounts, True)
+            book_user_pk = algo_helper.get_private_key_from_mnemonic(book_user.get('mnemonic'))
+            carsharing_trip.cancel_participation(creator_private_key, book_user_pk, book_user.get('name'))
         elif x == 4:
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
@@ -146,14 +145,25 @@ def main():
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
+            # ------- trip info ---------
+            creator = get_test_user(accounts, True)
+            creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
+            trip_creator_name = creator.get('name')
+            trip_start_add = input("Enter Departure Location: ")
+            trip_end_add = input("Enter Arrival Location: ")
+            trip_start_date = input("Enter Departure Time (yyyy-mm-dd hh:mm): ")
+            trip_end_date = input("Enter Arrival Time (yyyy-mm-dd hh:mm): ")
+            trip_unit_cost = int(input("Enter Transportation Cost per Ton: "))
+            trip_capacity = int(input("Enter Total Capacity in Ton: "))
+            # ---------------------------
             carsharing_trip.update_trip_info(creator_private_key=creator_private_key,
                                              trip_creator_name=trip_creator_name,
                                              trip_start_address=trip_start_add,
                                              trip_end_address=trip_end_add,
                                              trip_start_date=trip_start_date,
                                              trip_end_date=trip_end_date,
-                                             trip_cost=trip_cost,
-                                             trip_available_seats=trip_seats)
+                                             trip_unit_cost=trip_unit_cost,
+                                             trip_capacity=trip_capacity)
         elif x == 6:
             utils.console_log("Are you sure?", 'red')
             y = strip(input())
@@ -166,6 +176,7 @@ def main():
             read_state(algod_client, carsharing_trip.app_id, show_debug=False)
         else:
             print("Exiting..")
+            break
 
 
 if __name__ == "__main__":
