@@ -1,9 +1,8 @@
 # Algorand Carsharing Python
-Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-details/dapps/pyteal/) to build a dApp for car sharing in Algorand Blockchain.  
-Linked to [Algorand Carsharing Android](https://github.com/bara96/algo-carsharing-android) project.
+Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-details/dapps/pyteal/) to build a dApp for cargo transportation in Algorand Blockchain.
 
 This is a project developed for my Master's Degree in Computer Science.  
-Feel free to [read the thesis](https://github.com/bara96/algo-carsharing-android/wiki) if you want to achieve a better knowledge on the work done. 
+Feel free to read the thesis(comming soon) if you want to achieve a better knowledge on the work done. 
 
 # Requirements
 - [Python3.6 or higher](https://www.python.org/downloads/)
@@ -76,11 +75,8 @@ Follow [this guide](https://developer.algorand.org/docs/sdks/go/?from_query=fund
 
 
 ## Test Wallet
-In order to test this application a local test Wallet is created with some funded account to use:
-- **wallet name:** carsharing-testnet
-- **wallet password:** carsharing
-
-You can see the funded account on [constants.py](constants.py) or into [assets/accounts.xlsx](assets/Accounts.xlsx).  
+In order to test this application a local test Wallet is needed with some funded account to use.
+You can see the funded account on [constants.py](constants.py) or into [assets/testnet_accounts.xlsx](assets/testnet_accounts.xlsx).  
 Commands to create a wallet and import funded users are written on [create_wallet.txt](create_wallet.txt).
 
 **Note**: this wallet is available only on sandbox mode with testnet configuration.

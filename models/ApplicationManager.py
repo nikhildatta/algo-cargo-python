@@ -158,8 +158,7 @@ class ApplicationManager:
                    algod_client: algod.AlgodClient,
                    address: str,
                    app_id: int,
-                   sign_transaction: str = None,
-                   book_capacity: int):
+                   sign_transaction: str = None):
         """
         Perform a OptIn transaction:
         Accounts use this transaction to begin participating in a smart contract.
@@ -168,7 +167,6 @@ class ApplicationManager:
         :param address:
         :param app_id:
         :param sign_transaction:
-        :param book_capacity:
         """
         utils.console_log("OptIn from account: {}".format(address), "green")
 

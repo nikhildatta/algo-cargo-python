@@ -305,8 +305,7 @@ class Trip:
                 call_txn = ApplicationManager.opt_in_app(algod_client=self.algod_client,
                                                          address=address,
                                                          app_id=self.app_id,
-                                                         sign_transaction=user_private_key,
-                                                         book_capacity=book_capacity)
+                                                         sign_transaction=user_private_key)
                 txn_response = ApplicationManager.send_transaction(self.algod_client, call_txn)
                 utils.console_log("OptIn to Application with app-id: {}"
                                   .format(self.app_id), "green")
@@ -314,7 +313,8 @@ class Trip:
                 utils.console_log("Error during optin call: {}".format(e))
 
         app_args = [
-            self.app_contract.AppMethods.participate_trip
+            self.app_contract.AppMethods.participate_trip,
+            algo_helper.intToBytes(book_capacity)
         ]
         try:
             global_state, \
@@ -326,7 +326,6 @@ class Trip:
                                                                 show=False)
 
             self.check_program_hash(approval_program=approval_program, clear_state_program=clear_state_program)
-
             trip_unit_cost = global_state.get("trip_unit_cost")
             escrow_address = algo_helper.BytesToAddress(global_state.get("escrow_address"))
 
@@ -355,14 +354,12 @@ class Trip:
             return False
 
     def cancel_participation(self,
-                             creator_private_key: str,
                              user_private_key: str,
                              user_name: str):
         """
         Cancel user participation to the trip
         Perform a payment refund transaction from the escrow to the user
         Perform a check transaction from the verifier
-        :param creator_private_key:
         :param user_private_key:
         :param user_name:
         """
@@ -398,6 +395,7 @@ class Trip:
             self.check_program_hash(approval_program=approval_program, clear_state_program=clear_state_program)
 
             trip_unit_cost = global_state.get("trip_unit_cost")
+            book_capacity = local_state.get("book_capacity")
             escrow_address = algo_helper.BytesToAddress(global_state.get("escrow_address"))
 
             call_txn = ApplicationManager.call_app(algod_client=self.algod_client,

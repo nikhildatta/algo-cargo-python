@@ -104,10 +104,10 @@ def main():
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
             trip_creator_name = creator.get('name')
-            trip_start_add = input("Enter Dispatch Location: ")
-            trip_end_add = input("Enter Arrival Location: ")
+            trip_start_add = input("Enter Dispatch Point: ")
+            trip_end_add = input("Enter Destination: ")
             trip_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
-            trip_end_date = input("Enter Arrival Time (yyyy-mm-dd hh:mm): ")
+            trip_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
             trip_unit_cost = int(input("Enter Transportation Cost per kg: "))
             trip_capacity = int(input("Enter Total Capacity in kg: "))
             # ---------------------------
@@ -132,14 +132,17 @@ def main():
         elif x == 3:
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
-
+                continue
             book_user = get_test_user(accounts, True)
             book_user_pk = algo_helper.get_private_key_from_mnemonic(book_user.get('mnemonic'))
-            carsharing_trip.cancel_participation(creator_private_key, book_user_pk, book_user.get('name'))
+            carsharing_trip.cancel_participation(book_user_pk, book_user.get('name'))
         elif x == 4:
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
+            creator = get_test_user(accounts, True)
+            creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
+            trip_creator_name = creator.get('name')
             carsharing_trip.start_trip(creator_private_key)
         elif x == 5:
             if carsharing_trip.app_id is None:
@@ -149,14 +152,22 @@ def main():
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
             trip_creator_name = creator.get('name')
-            trip_start_add = input("Enter Departure Location: ")
-            trip_end_add = input("Enter Arrival Location: ")
-            trip_start_date = input("Enter Departure Time (yyyy-mm-dd hh:mm): ")
-            trip_end_date = input("Enter Arrival Time (yyyy-mm-dd hh:mm): ")
-            trip_unit_cost = int(input("Enter Transportation Cost per Ton: "))
-            trip_capacity = int(input("Enter Total Capacity in Ton: "))
+            update_option = int(input("What would you like to update?\n\
+                    1) Dispatch Details\n\
+                    2) Destination Details\n\
+                    3) Transportation Details\n"))
+            if update_option == 1:
+                trip_start_add = input("Enter Dispatch Point: ")
+                trip_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
+            elif update_option == 2:
+                trip_end_add = input("Enter Destination: ")
+                trip_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
+            elif update_option == 3:
+                trip_unit_cost = int(input("Enter Transportation Cost per kg: "))
+                trip_capacity = int(input("Enter Total Capacity in kg: "))
             # ---------------------------
-            carsharing_trip.update_trip_info(creator_private_key=creator_private_key,
+            if update_option in [1,2,3]:
+                carsharing_trip.update_trip_info(creator_private_key=creator_private_key,
                                              trip_creator_name=trip_creator_name,
                                              trip_start_address=trip_start_add,
                                              trip_end_address=trip_end_add,
@@ -171,6 +182,9 @@ def main():
                 continue
             if carsharing_trip.app_id is None:
                 utils.console_log("Invalid app_id")
+            creator = get_test_user(accounts, True)
+            creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
+            trip_creator_name = creator.get('name')
             carsharing_trip.close_trip(creator_private_key, accounts)
         elif x == 7:
             read_state(algod_client, carsharing_trip.app_id, show_debug=False)

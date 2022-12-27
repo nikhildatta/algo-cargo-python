@@ -22,7 +22,7 @@ class CarSharingContract:
         trip_capacity = Bytes("trip_capacity")  # Int
         escrow_address = Bytes("escrow_address")  # Bytes
         # Local State Keys
-        is_participating = Bytes("is_participating")  # Int
+        book_capacity = Bytes("book_capacity")  # Int
 
     class AppMethods:
         initialize_escrow = "initializeEscrow"
@@ -135,8 +135,7 @@ class CarSharingContract:
         :return:
         """
         valid_number_of_args = Txn.application_args.length() == Int(10)
-        no_participants = App.globalGet(self.Variables.trip_capacity) == App.globalGet(
-            self.Variables.max_capacity)
+        no_participants = App.globalGet(self.Variables.trip_capacity) == App.globalGet(self.Variables.max_capacity)
         trip_ready = App.globalGet(self.Variables.app_state) == self.AppState.ready
         is_creator = Txn.sender() == App.globalGet(self.Variables.creator_address)
 
@@ -248,10 +247,11 @@ class CarSharingContract:
         Perform validity checks and payment checks
         :return:
         """
-        get_participant_state = App.localGetEx(Int(0), App.id(), self.Variables.is_participating)
+        get_participant_state = App.localGetEx(Int(0), App.id(), self.Variables.book_capacity)
         trip_capacity = App.globalGet(self.Variables.trip_capacity)
         valid_number_of_transactions = Global.group_size() == Int(2)
         is_creator = Txn.sender() == App.globalGet(self.Variables.creator_address)
+        book_capacity = Btoi(Txn.application_args[1])
 
         is_not_participating = Or(
             Not(get_participant_state.hasValue()),
@@ -262,7 +262,7 @@ class CarSharingContract:
         can_participate = And(
             App.globalGet(self.Variables.app_state) == self.AppState.ready,
             Not(is_creator),
-            App.globalGet(self.Variables.trip_capacity) > Int(0),  # check if there is an available seat
+            App.globalGet(self.Variables.trip_capacity) >= book_capacity,  # check if there is an available seat
             Global.round() <= App.globalGet(self.Variables.departure_date_round),  # check if trip is started
             valid_number_of_transactions,
         )
@@ -271,7 +271,7 @@ class CarSharingContract:
         valid_payment = And(
             Gtxn[1].type_enum() == TxnType.Payment,
             Gtxn[1].receiver() == App.globalGet(self.Variables.escrow_address),
-            Gtxn[1].amount() == App.globalGet(self.Variables.trip_unit_cost),
+            Gtxn[1].amount() == App.globalGet(self.Variables.trip_unit_cost)*book_capacity,
             Gtxn[1].sender() == Gtxn[0].sender(),
         )
 
@@ -280,8 +280,8 @@ class CarSharingContract:
             get_participant_state,
             Assert(is_not_participating),
             # update state
-            App.globalPut(self.Variables.trip_capacity, trip_capacity - Int(1)),  # decrease seats
-            App.localPut(Int(0), self.Variables.is_participating, Int(1)),  # set user as participating
+            App.globalPut(self.Variables.trip_capacity, trip_capacity - book_capacity),  # decrease seats
+            App.localPut(Int(0), self.Variables.book_capacity, book_capacity),  # set user as participating
         ])
 
         return Seq([
@@ -298,13 +298,14 @@ class CarSharingContract:
         Perform validity checks and payment-refund checks
         :return:
         """
-        get_participant_state = App.localGetEx(Int(0), App.id(), self.Variables.is_participating)
+        get_participant_state = App.localGetEx(Int(0), App.id(), self.Variables.book_capacity)
         trip_capacity = App.globalGet(self.Variables.trip_capacity)
         valid_number_of_transactions = Global.group_size() == Int(2)
         is_creator = Txn.sender() == App.globalGet(self.Variables.creator_address)
+        
         is_participating = And(
             get_participant_state.hasValue(),
-            get_participant_state.value() == Int(1),
+            get_participant_state.value() != Int(0),
         )
 
         # check if user can cancel participation
@@ -318,7 +319,7 @@ class CarSharingContract:
         valid_refund = And(
             Gtxn[1].type_enum() == TxnType.Payment,
             Gtxn[1].receiver() == Gtxn[0].sender(),
-            Gtxn[1].amount() == App.globalGet(self.Variables.trip_unit_cost),
+            Gtxn[1].amount() == App.globalGet(self.Variables.trip_unit_cost)*App.localGet(Int(0), self.Variables.book_capacity),
             Gtxn[1].sender() == App.globalGet(self.Variables.escrow_address),
         )
 
@@ -327,8 +328,8 @@ class CarSharingContract:
             get_participant_state,
             Assert(is_participating),
             # update state
-            App.globalPut(self.Variables.trip_capacity, trip_capacity + Int(1)),  # increase seats
-            App.localPut(Int(0), self.Variables.is_participating, Int(0)),  # set user as not participating
+            App.globalPut(self.Variables.trip_capacity, trip_capacity + App.localGet(Int(0), self.Variables.book_capacity)),  # increase seats
+            App.localPut(Int(0), self.Variables.book_capacity, Int(0)),  # set user as not participating
             Return(Int(1))
         ])
 
