@@ -1,5 +1,5 @@
-# Algorand Carsharing Python
-Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-details/dapps/pyteal/) to build a dApp for cargo transportation in Algorand Blockchain.
+# Algorand Transportation and Logistics Management Python
+Smart Contract developed in [PyTeal](https://developer.algorand.org/docs/get-details/dapps/pyteal/) to build a dApp for cargo transportation and logistics management in Algorand Blockchain.
 
 This is a project developed for my Master's Degree in Computer Science.  
 Feel free to read the thesis(comming soon) if you want to achieve a better knowledge on the work done. 
