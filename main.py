@@ -6,7 +6,7 @@ from numpy.core.defchararray import strip
 
 from constants import Constants, get_env
 from helpers import algo_helper
-from models.Trip import Trip
+from models.Delivery import Delivery
 from utilities import utils
 
 
@@ -84,110 +84,124 @@ def main():
     app_id = int(get_env('APP_ID'))
     accounts = Constants.accounts
 
-    carsharing_trip = Trip(algod_client=algod_client, app_id=app_id)
+    logistic_manager = Delivery(algod_client=algod_client, app_id=app_id)
     color = 'blue'
     
     while True:
         utils.console_log("--------------------------------------------", color)
         utils.console_log('What do you want to do?', color)
-        utils.console_log('1) Create Trip', color)
+        utils.console_log('1) Create Delivery', color)
         utils.console_log('2) Participate', color)
         utils.console_log('3) Cancel Participation', color)
-        utils.console_log('4) Start Trip', color)
-        utils.console_log('5) Update Trip', color)
-        utils.console_log('6) Delete Trip', color)
-        utils.console_log('7) Get Trip State', color)
+        utils.console_log('4) Start Delivery', color)
+        utils.console_log('5) Update Delivery', color)
+        utils.console_log('6) Delete Delivery', color)
+        utils.console_log('7) Finish Delivery', color)
+        utils.console_log('8) Get Delivery State', color)
         utils.console_log("--------------------------------------------", color)
         x = int(strip(input()))
         if x == 1:
-            # ------- trip info ---------
+            # ------- delivery info ---------
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
-            trip_creator_name = creator.get('name')
-            trip_start_add = input("Enter Dispatch Point: ")
-            trip_end_add = input("Enter Destination: ")
-            trip_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
-            trip_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
-            trip_unit_cost = int(input("Enter Transportation Cost per kg: "))
-            trip_capacity = int(input("Enter Total Capacity in kg: "))
+            delivery_creator_name = creator.get('name')
+            #delivery_start_add = input("Enter Dispatch Point: ")
+            delivery_start_add = "Chennai"
+            #delivery_end_add = input("Enter Destination: ")
+            delivery_end_add = "Mumbai"
+            delivery_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
+            delivery_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
+            #delivery_unit_cost = int(input("Enter Transportation Cost per kg: "))
+            delivery_unit_cost = 10
+            #delivery_capacity = int(input("Enter Total Capacity in kg: "))
+            delivery_capacity = 1000
             # ---------------------------
-            carsharing_trip.create_app(creator_private_key=creator_private_key,
-                                       trip_creator_name=trip_creator_name,
-                                       trip_start_address=trip_start_add,
-                                       trip_end_address=trip_end_add,
-                                       trip_start_date=trip_start_date,
-                                       trip_end_date=trip_end_date,
-                                       trip_unit_cost=trip_unit_cost,
-                                       trip_capacity=trip_capacity)
-            carsharing_trip.initialize_escrow(creator_private_key)
-            carsharing_trip.fund_escrow(creator_private_key)
+            logistic_manager.create_app(creator_private_key=creator_private_key,
+                                       delivery_creator_name=delivery_creator_name,
+                                       delivery_start_address=delivery_start_add,
+                                       delivery_end_address=delivery_end_add,
+                                       delivery_start_date=delivery_start_date,
+                                       delivery_end_date=delivery_end_date,
+                                       delivery_unit_cost=delivery_unit_cost,
+                                       delivery_capacity=delivery_capacity)
+            logistic_manager.initialize_escrow(creator_private_key)
+            logistic_manager.fund_escrow(creator_private_key)
         elif x == 2:
-            if carsharing_trip.app_id is None:
+            if logistic_manager.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
             book_user = get_test_user(accounts, True)
             book_user_pk = algo_helper.get_private_key_from_mnemonic(book_user.get('mnemonic'))
-            book_capacity = int(input("Enter Needed Capacity in kg: "))
-            carsharing_trip.participate(book_user_pk, book_user.get('name'), book_capacity)
+            #book_capacity = int(input("Enter Needed Capacity in kg: "))
+            book_capacity = 20
+            logistic_manager.participate(book_user_pk, book_user.get('name'), book_capacity)
         elif x == 3:
-            if carsharing_trip.app_id is None:
+            if logistic_manager.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
             book_user = get_test_user(accounts, True)
             book_user_pk = algo_helper.get_private_key_from_mnemonic(book_user.get('mnemonic'))
-            carsharing_trip.cancel_participation(book_user_pk, book_user.get('name'))
+            logistic_manager.cancel_participation(book_user_pk, book_user.get('name'))
         elif x == 4:
-            if carsharing_trip.app_id is None:
+            if logistic_manager.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
-            trip_creator_name = creator.get('name')
-            carsharing_trip.start_trip(creator_private_key)
+            delivery_creator_name = creator.get('name')
+            logistic_manager.start_delivery(creator_private_key)
         elif x == 5:
-            if carsharing_trip.app_id is None:
+            if logistic_manager.app_id is None:
                 utils.console_log("Invalid app_id")
                 continue
-            # ------- trip info ---------
+            # ------- delivery info ---------
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
-            trip_creator_name = creator.get('name')
+            delivery_creator_name = creator.get('name')
             update_option = int(input("What would you like to update?\n\
                     1) Dispatch Details\n\
                     2) Destination Details\n\
                     3) Transportation Details\n"))
             if update_option == 1:
-                trip_start_add = input("Enter Dispatch Point: ")
-                trip_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
+                delivery_start_add = input("Enter Dispatch Point: ")
+                delivery_start_date = input("Enter Dispatch Time (yyyy-mm-dd hh:mm): ")
             elif update_option == 2:
-                trip_end_add = input("Enter Destination: ")
-                trip_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
+                delivery_end_add = input("Enter Destination: ")
+                delivery_end_date = input("Enter Destination Time (yyyy-mm-dd hh:mm): ")
             elif update_option == 3:
-                trip_unit_cost = int(input("Enter Transportation Cost per kg: "))
-                trip_capacity = int(input("Enter Total Capacity in kg: "))
+                delivery_unit_cost = int(input("Enter Transportation Cost per kg: "))
+                delivery_capacity = int(input("Enter Total Capacity in kg: "))
             # ---------------------------
             if update_option in [1,2,3]:
-                carsharing_trip.update_trip_info(creator_private_key=creator_private_key,
-                                             trip_creator_name=trip_creator_name,
-                                             trip_start_address=trip_start_add,
-                                             trip_end_address=trip_end_add,
-                                             trip_start_date=trip_start_date,
-                                             trip_end_date=trip_end_date,
-                                             trip_unit_cost=trip_unit_cost,
-                                             trip_capacity=trip_capacity)
+                logistic_manager.update_delivery_info(creator_private_key=creator_private_key,
+                                             delivery_creator_name=delivery_creator_name,
+                                             delivery_start_address=delivery_start_add,
+                                             delivery_end_address=delivery_end_add,
+                                             delivery_start_date=delivery_start_date,
+                                             delivery_end_date=delivery_end_date,
+                                             delivery_unit_cost=delivery_unit_cost,
+                                             delivery_capacity=delivery_capacity)
         elif x == 6:
             utils.console_log("Are you sure?", 'red')
             y = strip(input())
             if y != "y" and y != "yes":
                 continue
-            if carsharing_trip.app_id is None:
+            if logistic_manager.app_id is None:
                 utils.console_log("Invalid app_id")
             creator = get_test_user(accounts, True)
             creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
-            trip_creator_name = creator.get('name')
-            carsharing_trip.close_trip(creator_private_key, accounts)
+            delivery_creator_name = creator.get('name')
+            logistic_manager.close_delivery(creator_private_key, accounts)
         elif x == 7:
-            read_state(algod_client, carsharing_trip.app_id, show_debug=False)
+            if logistic_manager.app_id is None:
+                utils.console_log("Invalid app_id")
+                continue
+            creator = get_test_user(accounts, True)
+            creator_private_key = algo_helper.get_private_key_from_mnemonic(creator.get('mnemonic'))
+            delivery_creator_name = creator.get('name')
+            logistic_manager.finish_delivery(creator_private_key)
+        elif x == 8:
+            read_state(algod_client, logistic_manager.app_id, show_debug=False)
         else:
             print("Exiting..")
             break
